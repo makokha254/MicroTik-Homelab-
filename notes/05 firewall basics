@@ -1,0 +1,135 @@
+# 05 — Basic Firewall Rules (Input Chain)
+
+**Date:** 30th April 2026
+**Duration:** 10 minutes
+**Difficulty:** Beginner
+
+---
+
+## Goal
+
+Configure basic firewall filter rules on the input chain to protect the router itself from unwanted access, while allowing legitimate traffic from LAN devices and accepting ICMP (ping) from any address.
+
+---
+
+## What I Did
+
+Created an address list of allowed LAN devices:
+
+```routeros
+/ip firewall address-list add address=192.168.88.2-192.168.88.254 list=allowed-to-router
+```
+
+Added firewall filter rules in order:
+
+```routeros
+# Accept established and related connections
+/ip firewall filter add action=accept chain=input comment="default configuration" connection-state=established,related
+
+# Accept traffic from allowed LAN devices
+/ip firewall filter add action=accept chain=input src-address-list=allowed-to-router
+
+# Accept ICMP (ping)
+/ip firewall filter add action=accept chain=input protocol=icmp
+
+# Drop everything else
+/ip firewall filter add action=drop chain=input
+```
+
+---
+
+## What Broke
+
+**Accidentally entered the firewall filter submenu context** by running:
+
+```routeros
+/ip firewall filter
+```
+
+Without a command after it, MikroTik dropped into the submenu context instead of executing a command. Had to return to root with:
+
+```routeros
+/
+```
+
+**Also hit a typo** on the address-list verification command:
+
+```routeros
+ip firewall address-list priint
+```
+
+Returned error:
+
+```
+bad command name priint (line 1 column 26)
+```
+
+Self-corrected to:
+
+```routeros
+/ip firewall address-list print
+```
+
+---
+
+## How I Fixed It
+
+- Returned to root context using `/` then re-ran the full command with the correct syntax
+- Corrected `priint` typo to `print`
+
+---
+
+## What I Learned
+
+- **The input chain protects the router itself — not the LAN devices.** Traffic destined for the router's own IP address (management access, ping, etc.) is processed by the input chain. Traffic passing through the router toward LAN devices is handled by the forward chain — a separate configuration covered in a later session.
+
+- **Firewall rules are processed in order — sequence matters.** The drop rule at position 3 only fires after the three accept rules above it have been checked. If the drop rule were placed first, all traffic including legitimate LAN traffic would be blocked. Always build firewall rules from most specific to most general, with the drop rule last.
+
+- **MikroTik CLI syntax requires full commands on one line.** Running `/ip firewall filter` alone drops into a submenu context rather than executing a command. When working from the root, always write the full path and command together on a single line to avoid entering submenus unintentionally.
+
+- **MikroTik accepts both hyphens and underscores in list names.** The address list was named `allowed-to-router` instead of `allowed_to_router` as shown in the documentation — both work. Consistency matters more than which character you choose — pick one and stick with it across all configs.
+
+- **CLI syntax familiarity comes with repetition.** Small errors like typos and submenu navigation are normal at this stage. Each session builds muscle memory for the correct syntax patterns.
+
+---
+
+## Verification
+
+Commands used to confirm rules and address list were created correctly:
+
+```routeros
+/ip firewall filter print
+/ip firewall address-list print
+```
+
+**Output:**
+
+```
+[admin@MikroTik] > /ip firewall filter print
+Flags: X - disabled, I - invalid, D - dynamic
+ 0   ;;; default configuration
+     chain=input action=accept connection-state=established,related
+ 1   chain=input action=accept src-address-list=allowed-to-router
+ 2   chain=input action=accept protocol=icmp
+ 3   chain=input action=drop
+
+[admin@MikroTik] > /ip firewall address-list print
+Flags: X - disabled, D - dynamic
+ #   LIST                ADDRESS                      CREATION-TIME
+ 0   allowed-to-router   192.168.88.2-192.168.88.254  jan/02/1970 00:23:32
+```
+
+Four firewall rules confirmed in correct order on the input chain. Address list `allowed-to-router` confirmed with correct LAN range.
+
+---
+
+## Next Session
+
+With the router now protected by basic firewall rules, the next step is connecting the ISP modem to ether1 and verifying full end-to-end internet connectivity — confirming that DHCP client, NAT, and firewall rules all work together as expected.
+
+---
+
+## References
+
+- [MikroTik Firewall Filter Documentation](https://help.mikrotik.com/docs/display/ROS/Filter)
+- [MikroTik First Time Configuration — Protecting the Router](https://help.mikrotik.com/docs/spaces/ROS/pages/328151/First+Time+Configuration#FirstTimeConfiguration-ProtectingtheRouter)
