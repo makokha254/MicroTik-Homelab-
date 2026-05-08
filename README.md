@@ -79,8 +79,8 @@ To import on a MikroTik router:
 
 ## Contact
 
-- **LinkedIn:** [linkedin.com/in/your-profile](#)
-- **Email:** your@email.com
+- **LinkedIn:** [www.linkedin.com/in/haron-makokha](#)
+- **Email:** haronmarkmakokha@gmail.com
 - **CCNA Target:** Q3 2025
 
 ---
