@@ -1,0 +1,84 @@
+# 04 — NAT / Masquerade Configuration
+
+**Date:** 30th April 2026
+**Duration:** 5 minutes
+**Difficulty:** Beginner
+
+---
+
+## Goal
+
+Configure NAT (Network Address Translation) using Masquerade on the MikroTik router so that devices on the private LAN (192.168.88.0/24) can access the internet through the router's single public IP address on ether1.
+
+---
+
+## What I Did
+
+Added a NAT masquerade rule on the WAN interface:
+
+```routeros
+/ip firewall nat add chain=srcnat action=masquerade out-interface=ether1
+```
+
+Verified the rule was created:
+
+```routeros
+/ip firewall nat print
+```
+
+---
+
+## What Broke
+
+Nothing broke during this session. The command executed successfully on the first attempt.
+
+---
+
+## How I Fixed It
+
+No fix required.
+
+---
+
+## What I Learned
+
+- **NAT translates private LAN IP addresses into the router's single public IP address.** Devices on the LAN (192.168.88.x) have private addresses that are meaningless on the public internet. When a LAN device sends traffic out, NAT swaps its private IP for the router's public IP. When the response returns, the router reverses the translation and delivers it to the correct LAN device.
+
+- **Masquerade is a dynamic form of NAT suited for DHCP WAN connections.** Unlike standard NAT which is tied to a fixed public IP, Masquerade automatically uses whatever IP address is currently assigned to ether1. This makes it the correct choice when the ISP assigns a dynamic (changing) public IP via DHCP.
+
+- **Masquerade clears connection entries on disconnection or IP change.** When the WAN link drops or the public IP changes, all existing Masquerade NAT entries are cleared. This means active connections (downloads, video calls, etc.) are terminated and must be re-established after reconnection. This is a known trade-off of using Masquerade over static NAT rules — it increases recovery time after a WAN change but requires no manual reconfiguration.
+
+- **`chain=srcnat` means source NAT — outbound traffic only.** The `srcnat` chain processes packets leaving the LAN toward the internet. It is the correct chain for Masquerade. The alternative, `dstnat`, handles inbound traffic and is used for port forwarding — a separate configuration covered in a later session.
+
+---
+
+## Verification
+
+Command used to confirm the rule was created:
+
+```routeros
+/ip firewall nat print
+```
+
+**Output:**
+
+```
+[admin@MikroTik] > /ip firewall nat print
+Flags: X - disabled, I - invalid, D - dynamic
+ 0   chain=srcnat action=masquerade out-interface=ether1
+```
+
+NAT Masquerade rule confirmed on `ether1`. No flags — rule is active and not disabled. Will move to fully operational state once ISP modem is connected to ether1.
+
+---
+
+## Next Session
+
+Now that NAT is configured, LAN devices will be able to reach the internet once the ISP modem is connected. The next step is setting up basic firewall rules on the input chain to protect the router itself from unwanted access.
+
+---
+
+## References
+
+- [MikroTik NAT Documentation](https://wiki.mikrotik.com/wiki/Manual:IP/Firewall/NAT)
+- [MikroTik First Time Configuration — NAT](https://help.mikrotik.com/docs/spaces/ROS/pages/328151/First+Time+Configuration#FirstTimeConfiguration-NATConfiguration)
