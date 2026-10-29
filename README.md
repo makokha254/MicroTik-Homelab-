@@ -117,9 +117,6 @@ To import on a MikroTik router:
 /import file-name=filename.rsc
 ```
 
-> ⚠️ Always review a config before importing. IP ranges and interface names may need adjusting for your environment.
-
----
 
 ## About Me
 
