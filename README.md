@@ -101,23 +101,6 @@ Every session follows a consistent structure:
 - Configuration export and version control via GitHub
 
 ---
-
-## How to Use These Configs
-
-All `.rsc` files are exported directly from RouterOS using section-specific export commands:
-
-```routeros
-/ip address export file=filename
-/ip firewall nat export file=filename
-```
-
-To import on a MikroTik router:
-
-```routeros
-/import file-name=filename.rsc
-```
-
-
 ## About Me
 
 I am a Business Information Technology graduate from the Technical University of Mombasa, specialising in networking. This repository represents my commitment to building real, verifiable skills on physical hardware beyond the classroom — documented transparently, including mistakes and how they were resolved.
